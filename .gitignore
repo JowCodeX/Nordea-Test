@@ -1,0 +1,8 @@
+node_modules/
+dist/
+certs/
+.env
+debug.log
+npm-debug.log
+.vscode/
+*.log
