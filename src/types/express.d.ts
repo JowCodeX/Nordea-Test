@@ -1,9 +1,10 @@
 import { Response } from 'express';
+import { Personnummer } from '../middleware/validation';
 
 declare global {
 namespace Express {
     interface Locals {
-    personnummer: string;
+    personnummer?: string;
     }
     
     interface Response {

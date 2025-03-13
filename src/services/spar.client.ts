@@ -1,7 +1,8 @@
 import soap, { createClientAsync, Client, ISecurity } from 'soap';
 import https from 'https';
-import fs from 'fs';
+import fs, { constants } from 'fs';
 import { SPAR_CONFIG, SERVER_CONFIG } from '../config/env';
+import * as crypto from 'crypto';
 
 export class SparClient {
     private static instance: Promise<Client>;
@@ -15,13 +16,17 @@ export class SparClient {
 
     private static async createClient(): Promise<Client> {
         // Configure mutual TLS
-        const wsdlOptions = {
-            cert: fs.readFileSync(SPAR_CONFIG.CERTS.CERT),
-            key: fs.readFileSync(SPAR_CONFIG.CERTS.KEY),
-            ca: fs.readFileSync(SPAR_CONFIG.CERTS.CA),
-            rejectUnauthorized: SERVER_CONFIG.ENV === 'production',
-            forever: true // Keep TCP connection alive
-        };
+// In spar.client.ts
+const wsdlOptions = {
+cert: fs.readFileSync(SPAR_CONFIG.CERTS.CERT),
+key: fs.readFileSync(SPAR_CONFIG.CERTS.KEY),
+ca: fs.readFileSync(SPAR_CONFIG.CERTS.CA),
+secureOptions: 
+    crypto.constants.SSL_OP_NO_SSLv3 | 
+    crypto.constants.SSL_OP_NO_TLSv1 |
+    crypto.constants.SSL_OP_NO_TLSv1_1,
+rejectUnauthorized: true
+};
 
         const client = await createClientAsync(SPAR_CONFIG.WSDL_URL, {
             wsdl_options: wsdlOptions,
