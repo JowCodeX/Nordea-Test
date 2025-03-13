@@ -1,59 +1,86 @@
 import soap, { createClientAsync, Client, ISecurity } from 'soap';
 import https from 'https';
-import fs, { constants } from 'fs';
+import fs from 'fs';
+import { constants } from 'crypto';
 import { SPAR_CONFIG, SERVER_CONFIG } from '../config/env';
-import * as crypto from 'crypto';
 
 export class SparClient {
     private static instance: Promise<Client>;
+    private static lastClientCreation: number = 0;
 
     static async getClient(): Promise<Client> {
-        if (!this.instance) {
+        // Recreate client if older than 5 minutes
+        if (!this.instance || Date.now() - this.lastClientCreation > 300000) {
             this.instance = this.createClient();
+            this.lastClientCreation = Date.now();
         }
         return this.instance;
     }
 
     private static async createClient(): Promise<Client> {
-        // Configure mutual TLS
-// In spar.client.ts
-const wsdlOptions = {
-cert: fs.readFileSync(SPAR_CONFIG.CERTS.CERT),
-key: fs.readFileSync(SPAR_CONFIG.CERTS.KEY),
-ca: fs.readFileSync(SPAR_CONFIG.CERTS.CA),
-secureOptions: 
-    crypto.constants.SSL_OP_NO_SSLv3 | 
-    crypto.constants.SSL_OP_NO_TLSv1 |
-    crypto.constants.SSL_OP_NO_TLSv1_1,
-rejectUnauthorized: true
-};
+        try {
+            const wsdlOptions = {
+                strictSSL: true,
+                rejectUnauthorized: SERVER_CONFIG.ENV === 'production',
+                secureOptions: 
+                    constants.SSL_OP_NO_SSLv3 |
+                    constants.SSL_OP_NO_TLSv1 |
+                    constants.SSL_OP_NO_TLSv1_1,
+                cert: fs.readFileSync(SPAR_CONFIG.CERTS.CERT),
+                key: fs.readFileSync(SPAR_CONFIG.CERTS.KEY),
+                ca: fs.readFileSync(SPAR_CONFIG.CERTS.CA),
+                agent: new https.Agent({ keepAlive: true })
+            };
 
-        const client = await createClientAsync(SPAR_CONFIG.WSDL_URL, {
-            wsdl_options: wsdlOptions,
-            forceSoap12Headers: true,
-            overridePromiseSuffix: 'Async' // Enable promise-style calls
-        });
+            const client = await createClientAsync(SPAR_CONFIG.WSDL_URL, {
+                wsdl_options: wsdlOptions,
+                forceSoap12Headers: true,
+                overridePromiseSuffix: 'Async'
+            });
 
-        // Add WS-Security headers
-        const securityHeader: ISecurity = {
-            postProcess: (xml: string) => {
-                return xml.replace(
-                    '<soap:Header/>',
-                    `<soap:Header>
-                        <wsse:Security xmlns:wsse="http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-secext-1.0.xsd">
-                            <wsse:UsernameToken>
-                                <wsse:Username>${SPAR_CONFIG.CUSTOMER_NUMBER}</wsse:Username>
-                                <wsse:Password Type="http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-username-token-profile-1.0#PasswordText">
-                                    ${SPAR_CONFIG.ASSIGNMENT_ID}
-                                </wsse:Password>
-                            </wsse:UsernameToken>
-                        </wsse:Security>
-                    </soap:Header>`
-                );
+            this.configureSecurityHeaders(client);
+            this.setupClientHooks(client);
+
+            return client;
+        } catch (error) {
+            console.error('SOAP client creation failed:', error);
+            throw new Error('Failed to initialize SPAR client');
+        }
+    }
+
+    private static configureSecurityHeaders(client: Client) {
+        const securityHeader = {
+            'wsse:Security': {
+                $: {
+                    'xmlns:wsse': 'http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-secext-1.0.xsd',
+                    'xmlns:wsu': 'http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-utility-1.0.xsd'
+                },
+                'wsse:UsernameToken': {
+                    'wsse:Username': SPAR_CONFIG.CUSTOMER_NUMBER,
+                    'wsse:Password': {
+                        $: {
+                            Type: 'http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-username-token-profile-1.0#PasswordText'
+                        },
+                        _: SPAR_CONFIG.ASSIGNMENT_ID
+                    }
+                }
             }
         };
-        client.setSecurity(securityHeader);
 
-        return client;
+        client.addSoapHeader(securityHeader);
+    }
+
+    private static setupClientHooks(client: Client) {
+        client.on('request', (xml, eid) => {
+            console.debug(`SOAP Request (${eid}):`, xml);
+        });
+
+        client.on('response', (xml, eid) => {
+            console.debug(`SOAP Response (${eid}):`, xml);
+        });
+
+        client.on('soapError', (error, eid) => {
+            console.error(`SOAP Error (${eid}):`, error);
+        });
     }
 }

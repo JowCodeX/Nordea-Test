@@ -6,72 +6,52 @@ import { SPAR_CONFIG } from '../config/env';
 
 const router = Router();
 
-// Update XML parser config in lookup.ts
-// src/routes/lookup.ts
 const parser = new XMLParser({
     ignoreAttributes: false,
-    attributeNamePrefix: '',
+    attributeNamePrefix: '@',
     textNodeName: '#text',
     trimValues: true,
     processEntities: true,
     tagValueProcessor: (_, val) => val.trim(),
-    
-    // Remove namespace prefixes from tags
     transformTagName: (tagName) => tagName.replace(/^.*:/, ''),
-    
-    // Array handling configuration
-    isArray: (name, jpath) => {
-        // List of elements that should ALWAYS be arrays
-        const arrayElements = [
-            'Fornamn',       // First name(s)
-            'Efternamn'      // Last name(s)
-        ];
-        
-        // List of elements that should NEVER be arrays
-        const singleElements = [
-            'PersonsokningSvarspost',  // Main response object
-            'Namn',                    // Name container
-            'Folkbokforingsadress',    // Registered address
-            'SvenskAdress'             // Swedish address details
-        ];
-        
-        // Decision logic:
-        if (arrayElements.includes(name)) return true;  // Force array
-        if (singleElements.includes(name)) return false; // Force single
-        return false; // Default: single element
-    }
+    isArray: (name) => new Set(['Fornamn', 'Efternamn']).has(name)
 });
 
-// In lookup.ts transformResponse
 const transformResponse = (data: SparResponse) => {
     const person = data.Envelope?.Body?.PersonsokningSvar?.PersonsokningSvarspost;
     
-    if (!person || person.Status !== '1') return null;
+    if (!person) return null;
+
+    const statusMapping: Record<string, { code: string; message: string }> = {
+        '1': { code: 'FOUND', message: 'Person found' },
+        '2': { code: 'PROTECTED', message: 'Protected identity' },
+        '3': { code: 'DECEASED', message: 'Deceased person' },
+        '4': { code: 'NOT_FOUND', message: 'Person not found' }
+    };
 
     return {
-    name: formatName(person.Namn),
-    birthDate: person.Persondetaljer?.Fodelsedatum,
-    address: formatAddress(person.Folkbokforingsadress?.SvenskAdress),
-    protectedIdentity: person.SkyddadIdentitet === 'true',
-      lastUpdated: person.SenastAndrad || 'Unknown' // Safe access
+        status: statusMapping[person.Status] || { code: 'UNKNOWN', message: 'Unknown status' },
+        data: person.Status === '1' ? {
+            name: formatName(person.Namn),
+            birthDate: person.Persondetaljer?.Fodelsedatum,
+            address: formatAddress(person.Folkbokforingsadress?.SvenskAdress),
+            protectedIdentity: person.SkyddadIdentitet === 'true',
+            lastUpdated: person.SenastAndrad
+        } : null
     };
 };
 
-// Response transformation utilities
-// In lookup.ts
 const formatName = (name?: { 
     Fornamn?: string | string[];
     Efternamn?: string | string[];
 }): string => {
-    const firstName = Array.isArray(name?.Fornamn) 
-    ? name?.Fornamn.join(' ') 
-    : name?.Fornamn || '';
-
-    const lastName = Array.isArray(name?.Efternamn)
-    ? name?.Efternamn.join(' ')
-    : name?.Efternamn || '';
-
-    return [firstName, lastName].filter(Boolean).join(' ') || 'Name not available';
+    const firstNames = Array.isArray(name?.Fornamn) ? name.Fornamn : [name?.Fornamn];
+    const lastNames = Array.isArray(name?.Efternamn) ? name.Efternamn : [name?.Efternamn];
+    
+    return [
+        ...(firstNames?.filter(Boolean) || []),
+        ...(lastNames?.filter(Boolean) || [])
+    ].join(' ') || 'Name not available';
 };
 
 const formatAddress = (address?: { 
@@ -79,18 +59,16 @@ const formatAddress = (address?: {
     PostNr?: string;
     Postort?: string;
 }) => ({
-    street: address?.Utdelningsadress2 || 'Unknown',
-    postalCode: address?.PostNr || 'Unknown',
-    city: address?.Postort || 'Unknown'
+    street: address?.Utdelningsadress2,
+    postalCode: address?.PostNr,
+    city: address?.Postort
 });
 
-// Main lookup endpoint
-router.get('/', async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+router.get('/', async (req: Request, res: Response, next: NextFunction) => {
     try {
         const pnr = res.locals.personnummer;
         const client = await SparClient.getClient();
 
-        // Use SOAP client's native request format
         const [soapResponse] = await client.PersonsokAsync({
             fraga: {
                 Identifieringsinformation: {
@@ -99,27 +77,21 @@ router.get('/', async (req: Request, res: Response, next: NextFunction): Promise
                     UppdragId: SPAR_CONFIG.ASSIGNMENT_ID,
                     SlutAnvandarId: 'spar-lookup'
                 },
-                PersonsokningFraga: {
-                    IdNummer: pnr
-                }
+                PersonsokningFraga: { IdNummer: pnr }
             }
         });
 
-        const parsedData: SparResponse = parser.parse(soapResponse);
-        const personData = transformResponse(parsedData);
+        const parsedData = parser.parse(soapResponse) as SparResponse;
+        const result = transformResponse(parsedData);
 
-        console.log('Raw SPAR response:', soapResponse);
-        console.log('Parsed structure:', parsedData);
-
-        if (!personData) {
-            res.status(404).json({ 
-                error: 'Person not found',
-                code: 'PERSON_NOT_FOUND'
+        if (!result?.data) {
+            return res.status(404).json({ 
+                error: result?.status.message || 'Person not found',
+                code: result?.status.code || 'UNKNOWN_ERROR'
             });
-            return;
         }
 
-        res.json(personData);
+        res.json(result);
     } catch (error) {
         console.error('SPAR lookup failed:', error);
         next({

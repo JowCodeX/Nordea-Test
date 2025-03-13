@@ -1,41 +1,64 @@
 import { Request, Response, NextFunction } from 'express';
 import validatePersonnummer from '../../src/middleware/validation';
 
-// Extend Express Request type for testing
-interface CustomRequest extends Request {
-locals?: {
-    personnummer?: string;
-};
-}
-
 describe('Personnummer Validation Middleware', () => {
-let mockRequest: Partial<CustomRequest>;
-let mockResponse: Partial<Response>;
-const nextFunction: NextFunction = jest.fn();
+    let mockRequest: Partial<Request>;
+    let mockResponse: Partial<Response>;
+    const nextFunction = jest.fn();
 
-beforeEach(() => {
-    mockRequest = { query: {} };
-    mockResponse = {
-    status: jest.fn().mockReturnThis(),
-    json: jest.fn(),
-      locals: { personnummer: '' } // Initialize with an empty string
-    };
-});
+    beforeEach(() => {
+        mockRequest = { query: {} };
+        mockResponse = {
+            status: jest.fn().mockReturnThis(),
+            json: jest.fn(),
+            locals: {}
+        };
+    });
 
-test('valid 10-digit format', async () => {
-    mockRequest.query = { personnummer: '900116-6959' };
-    
-    await validatePersonnummer(
-    mockRequest as Request,
-    {
-        ...mockResponse,
-        locals: {} // Explicitly initialize locals
-    } as Response,
-    nextFunction
-    );
+    const testCases = [
+        { input: '900116-6959', expected: '199001166959' },
+        { input: '9001166959', expected: '199001166959' },
+        { input: '199001166959', expected: '199001166959' },
+        { input: '900161-2391', expected: '199001612391' }, // Coordination number
+        { input: '000116-1234', expected: '200001161234' } // 21st century
+    ];
 
-    expect(nextFunction).toHaveBeenCalled();
-    expect(mockResponse.locals?.personnummer).toBe('199001166959');
-    expect(mockResponse.status).not.toHaveBeenCalled();
-});
+    testCases.forEach(({ input, expected }) => {
+        test(`correctly normalizes ${input}`, async () => {
+            mockRequest.query = { personnummer: input };
+            
+            await validatePersonnummer(
+                mockRequest as Request,
+                mockResponse as Response,
+                nextFunction
+            );
+
+            expect(mockResponse.locals?.personnummer).toBe(expected);
+            expect(nextFunction).toHaveBeenCalled();
+        });
+    });
+
+    const invalidCases = [
+        { input: '121212-1212', error: 'checksum' },
+        { input: '999999-9999', error: 'date' },
+        { input: 'invalid', error: 'format' },
+        { input: '000000-0000', error: 'checksum' }
+    ];
+
+    invalidCases.forEach(({ input, error }) => {
+        test(`rejects invalid input: ${input}`, async () => {
+            mockRequest.query = { personnummer: input };
+            
+            await validatePersonnummer(
+                mockRequest as Request,
+                mockResponse as Response,
+                nextFunction
+            );
+
+            expect(mockResponse.status).toHaveBeenCalledWith(400);
+            expect(mockResponse.json).toHaveBeenCalledWith(
+                expect.objectContaining({ error: expect.stringContaining(error) })
+            );
+        });
+    });
 });
