@@ -2,15 +2,7 @@ import soap from 'soap';
 
 jest.mock('soap', () => ({
 createClientAsync: jest.fn().mockImplementation(() => ({
-    PersonsokAsync: jest.fn().mockResolvedValue([{
-    Envelope: {
-        Body: {
-        PersonsokningSvar: {
-            PersonsokningSvarspost: {}
-        }
-        }
-    }
-    }])
+    PersonsokAsync: jest.fn()
 }))
 }));
 

@@ -1,4 +1,5 @@
 import { Request, Response, NextFunction } from "express";
+import { Locals } from '../types/spar';
 
 interface ValidationResult {
     normalized: string;
@@ -28,6 +29,7 @@ const luhnCheck = (number: string): boolean => {
     return sum % 10 === 0;
 };
 
+// Match your existing error response structure
 const sendValidationError = (
     res: Response, 
     errorType: 'format' | 'date' | 'checksum' | 'age'
@@ -37,23 +39,22 @@ const sendValidationError = (
             status: 400,
             error: 'Invalid personnummer format',
             validExamples: [
-                '900116-6959',
-                '9001166959',
-                '199001166959',
-                '900161-2391' // Coordination number example
+                '900116-6959', 
+                '9001166959', 
+                '199001166959'
             ]
         },
         date: {
             status: 400,
-            error: 'Invalid date in personnummer'
+            error: 'Invalid date components'
         },
         checksum: {
             status: 400,
-            error: 'Invalid checksum digit'
+            error: 'Luhn checksum validation failed'
         },
         age: {
             status: 400,
-            error: 'Cannot determine century (person might be over 100)'
+            error: 'Century determination failed'
         }
     };
     
@@ -62,7 +63,7 @@ const sendValidationError = (
 
 const validatePersonnummer = (
     req: Request,
-    res: Response,
+    res: Response<any, Express.Locals>,
     next: NextFunction
 ) => {
     try {
@@ -137,10 +138,7 @@ const validatePersonnummer = (
             return sendValidationError(res, 'checksum');
         }
 
-        res.locals = {
-            personnummer: normalized,
-            numberType: isCoordination ? 'coordination' : 'regular'
-        };
+        res.locals.personnummer = normalized;
         next();
     } catch (error) {
         next(error);

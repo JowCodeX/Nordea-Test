@@ -1,4 +1,4 @@
-import soap, { createClientAsync, Client, ISecurity } from 'soap';
+import soap, { createClientAsync, Client } from 'soap';
 import https from 'https';
 import fs from 'fs';
 import { constants } from 'crypto';
@@ -84,3 +84,5 @@ export class SparClient {
         });
     }
 }
+
+export default SparClient;

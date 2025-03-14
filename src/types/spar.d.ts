@@ -1,9 +1,6 @@
-// src/types/express.d.ts
-import { Personnummer } from '../middleware/validation';
-
 declare global {
 namespace Express {
-    interface Locals {
+interface Locals {
     personnummer: string;
     }
 }
@@ -30,7 +27,7 @@ export interface SparResponse {
             };
             };
             SkyddadIdentitet?: string;
-            SenastAndrad?: string; // Add this line
+            SenastAndrad?: string;
         };
         };
     };

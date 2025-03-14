@@ -1,12 +1,11 @@
 // test-utils/testServer.ts
-import express, { Application } from 'express';
-import lookup from '../../src/routes/lookup';
+import express, { Express } from 'express';
+import lookupRouter from '../../src/routes/lookup';
+import validatePersonnummer from '../../src/middleware/validation';
 
-export async function createTestServer(): Promise<Application> {
-const app: Application = express();
-
-  // Add your actual middleware and routes
-app.use('/lookup', lookup);
-
-return app;
-}
+export const createTestServer = async (): Promise<Express> => {
+    const app = express();
+    app.use(express.json());
+    app.use('/lookup', validatePersonnummer, lookupRouter);
+    return app;
+};
