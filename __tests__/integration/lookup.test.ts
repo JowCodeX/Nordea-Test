@@ -69,7 +69,12 @@ describe('Person Lookup API Integration', () => {
     });
 
     test('Handles not found response', async () => {
-        mockSparResponse({ Status: '4' });
+        mockSparResponse({
+            Status: '4',
+        PersonsokningSvarspost: {
+            Status: '4'
+        }
+    });
     
         const response = await request(app)
         .get('/lookup')

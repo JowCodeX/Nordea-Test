@@ -6,16 +6,19 @@ createClientAsync: jest.fn().mockImplementation(() => ({
 }))
 }));
 
-export function mockSparResponse(responseData: object) {
-(soap.createClientAsync as jest.Mock).mockImplementationOnce(() => ({
-    PersonsokAsync: jest.fn().mockResolvedValue([{
-    Envelope: {
-        Body: {
-        PersonsokningSvar: {
-            PersonsokningSvarspost: responseData
-        }
-        }
-    }
-    }])
-}));
-}
+export const mockSparResponse = (responseData: object) => {
+    (soap.createClientAsync as jest.Mock).mockImplementationOnce(() => ({
+        PersonsokAsync: jest.fn().mockResolvedValue([{
+            Envelope: {
+                Body: {
+                    PersonsokningSvar: {
+                        PersonsokningSvarspost: {
+                            Status: '1', // Ensure status is always set
+                            ...responseData
+                        }
+                    }
+                }
+            }
+        }])
+    }));
+};

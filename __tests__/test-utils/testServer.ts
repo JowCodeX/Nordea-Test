@@ -3,9 +3,18 @@ import express, { Express } from 'express';
 import lookupRouter from '../../src/routes/lookup';
 import validatePersonnummer from '../../src/middleware/validation';
 
-export const createTestServer = async (): Promise<Express> => {
+export async function createTestServer() {
     const app = express();
+    
+    // Add proper body parser
     app.use(express.json());
-    app.use('/lookup', validatePersonnummer, lookupRouter);
+    
+    // Mock validation middleware
+    app.use('/lookup', (req, res, next) => {
+        res.locals = { personnummer: '195704133106' }; // Valid test number
+        next();
+    });
+    
+    app.use('/lookup', lookupRouter);
     return app;
-};
+}

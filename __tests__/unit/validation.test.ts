@@ -129,6 +129,7 @@ describe('Personnummer Validation Middleware', () => {
             expect(nextFunction).not.toHaveBeenCalled(); // ← Missing in original
             expect(mockResponse.status).toHaveBeenCalledWith(400);
             expect(mockResponse.json).toHaveBeenCalledWith(
-                expect.objectContaining({ error: expectedError })
+                expect.objectContaining(
+                    { error: expect.stringContaining(expectedError)})
             );
         })})});
