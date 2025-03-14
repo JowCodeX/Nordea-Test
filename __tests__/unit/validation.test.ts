@@ -1,10 +1,9 @@
 import { Request, Response, NextFunction } from 'express';
 import validatePersonnummer from '../../src/middleware/validation';
-import Locals  from '../../src/types/spar';
 
 describe('Validation Middleware', () => {
     let req: Partial<Request>;
-    let res: Partial<Response & { locals: Locals }>;
+    let res: Partial<Response>;
     let next: NextFunction;
 
     beforeEach(() => {
@@ -14,7 +13,9 @@ describe('Validation Middleware', () => {
             }
         };
         res = {
-            locals: {} as Locals
+            locals: {personnummer: ''},
+            status: jest.fn().mockReturnThis(),
+            json: jest.fn()
         };
         next = jest.fn();
     });
@@ -22,7 +23,7 @@ describe('Validation Middleware', () => {
     test('should validate personnummer and set it in res.locals', () => {
         validatePersonnummer(req as Request, res as Response, next);
 
-        expect(res.locals.personnummer).toBe('195704133106');
+        expect(res.locals?.personnummer).toBe('195704133106');
         expect(next).toHaveBeenCalled();
     });
 
@@ -45,7 +46,7 @@ describe('Personnummer Validation Middleware', () => {
         mockResponse = {
             status: jest.fn().mockReturnThis(),
             json: jest.fn(),
-            locals: {}
+            locals: {personnummer: ''}
         };
     });
 
@@ -127,4 +128,7 @@ describe('Personnummer Validation Middleware', () => {
             // Add this critical assertion
             expect(nextFunction).not.toHaveBeenCalled(); // ← Missing in original
             expect(mockResponse.status).toHaveBeenCalledWith(400);
+            expect(mockResponse.json).toHaveBeenCalledWith(
+                expect.objectContaining({ error: expectedError })
+            );
         })})});

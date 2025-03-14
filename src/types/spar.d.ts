@@ -1,11 +1,3 @@
-declare global {
-namespace Express {
-interface Locals {
-    personnummer: string;
-    }
-}
-};
-
 export interface SparResponse {
     Envelope?: {
     Body?: {

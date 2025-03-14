@@ -1,5 +1,4 @@
 import { Request, Response, NextFunction } from "express";
-import { Locals } from '../types/spar';
 
 interface ValidationResult {
     normalized: string;
