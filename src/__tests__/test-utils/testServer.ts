@@ -1,7 +1,7 @@
 // test-utils/testServer.ts
 import express, { Express } from 'express';
-import lookupRouter from '../../src/routes/lookup';
-import validatePersonnummer from '../../src/middleware/validation';
+import lookupRouter from '../../routes/lookup';
+import validatePersonnummer from '../../middleware/validation';
 
 export async function createTestServer() {
     const app = express();

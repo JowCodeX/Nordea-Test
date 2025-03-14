@@ -3,13 +3,21 @@ import https from 'https';
 import fs from 'fs';
 import { constants } from 'crypto';
 import { SPAR_CONFIG, SERVER_CONFIG } from '../config/env';
+import * as mockSoapClient from '../__tests__/test-utils/mockSoapClient';
 
 export class SparClient {
-    private static instance: Promise<Client>;
+    private static instance: Promise<Client> | null = null; // Allow null for test environment
     private static lastClientCreation: number = 0;
 
     static async getClient(): Promise<Client> {
-        // Recreate client if older than 5 minutes
+        if (process.env.NODE_ENV === 'test') {
+            // Return a resolved promise of a mock client object for tests
+            return Promise.resolve({
+                PersonsokAsync: mockSoapClient.currentMockImplementation.PersonsokAsync
+            } as unknown as Client);
+        }
+
+        // Recreate client if older than 5 minutes or if instance is null
         if (!this.instance || Date.now() - this.lastClientCreation > 300000) {
             this.instance = this.createClient();
             this.lastClientCreation = Date.now();
@@ -18,11 +26,14 @@ export class SparClient {
     }
 
     private static async createClient(): Promise<Client> {
+        if (process.env.NODE_ENV === 'test') {
+            throw new Error('Should not create real SOAP client in test environment');
+        }
         try {
             const wsdlOptions = {
                 strictSSL: true,
                 rejectUnauthorized: SERVER_CONFIG.ENV === 'production',
-                secureOptions: 
+                secureOptions:
                     constants.SSL_OP_NO_SSLv3 |
                     constants.SSL_OP_NO_TLSv1 |
                     constants.SSL_OP_NO_TLSv1_1,

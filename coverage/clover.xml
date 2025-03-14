@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<coverage generated="1741968979541" clover="3.2.0">
-  <project timestamp="1741968979541" name="All files">
-    <metrics statements="109" coveredstatements="88" conditionals="36" coveredconditionals="23" methods="19" coveredmethods="11" elements="164" coveredelements="122" complexity="0" loc="109" ncloc="109" packages="4" files="4" classes="4"/>
+<coverage generated="1741981786174" clover="3.2.0">
+  <project timestamp="1741981786175" name="All files">
+    <metrics statements="114" coveredstatements="84" conditionals="38" coveredconditionals="21" methods="19" coveredmethods="10" elements="171" coveredelements="115" complexity="0" loc="114" ncloc="114" packages="4" files="4" classes="4"/>
     <package name="config">
       <metrics statements="10" coveredstatements="9" conditionals="7" coveredconditionals="3" methods="2" coveredmethods="2"/>
       <file name="env.ts" path="C:\Users\Jooow\Desktop\Nordea-Test\src\config\env.ts">
@@ -76,9 +76,9 @@
       </file>
     </package>
     <package name="routes">
-      <metrics statements="20" coveredstatements="14" conditionals="8" coveredconditionals="0" methods="4" coveredmethods="1"/>
+      <metrics statements="20" coveredstatements="16" conditionals="8" coveredconditionals="0" methods="4" coveredmethods="1"/>
       <file name="lookup.ts" path="C:\Users\Jooow\Desktop\Nordea-Test\src\routes\lookup.ts">
-        <metrics statements="20" coveredstatements="14" conditionals="8" coveredconditionals="0" methods="4" coveredmethods="1"/>
+        <metrics statements="20" coveredstatements="16" conditionals="8" coveredconditionals="0" methods="4" coveredmethods="1"/>
         <line num="1" count="1" type="stmt"/>
         <line num="2" count="1" type="stmt"/>
         <line num="3" count="1" type="stmt"/>
@@ -94,45 +94,50 @@
         <line num="33" count="3" type="stmt"/>
         <line num="34" count="3" type="stmt"/>
         <line num="35" count="3" type="stmt"/>
-        <line num="38" count="0" type="stmt"/>
-        <line num="52" count="0" type="stmt"/>
-        <line num="53" count="0" type="stmt"/>
-        <line num="55" count="3" type="stmt"/>
+        <line num="38" count="3" type="stmt"/>
+        <line num="52" count="3" type="stmt"/>
+        <line num="53" count="3" type="stmt"/>
+        <line num="55" count="0" type="stmt"/>
         <line num="59" count="1" type="stmt"/>
       </file>
     </package>
     <package name="services">
-      <metrics statements="28" coveredstatements="17" conditionals="3" coveredconditionals="3" methods="7" coveredmethods="2"/>
+      <metrics statements="33" coveredstatements="11" conditionals="5" coveredconditionals="1" methods="7" coveredmethods="1"/>
       <file name="spar.client.ts" path="C:\Users\Jooow\Desktop\Nordea-Test\src\services\spar.client.ts">
-        <metrics statements="28" coveredstatements="17" conditionals="3" coveredconditionals="3" methods="7" coveredmethods="2"/>
+        <metrics statements="33" coveredstatements="11" conditionals="5" coveredconditionals="1" methods="7" coveredmethods="1"/>
         <line num="1" count="2" type="stmt"/>
         <line num="2" count="2" type="stmt"/>
         <line num="3" count="2" type="stmt"/>
         <line num="4" count="2" type="stmt"/>
         <line num="5" count="2" type="stmt"/>
         <line num="7" count="2" type="stmt"/>
+        <line num="8" count="2" type="stmt"/>
         <line num="9" count="2" type="stmt"/>
-        <line num="13" count="3" type="cond" truecount="3" falsecount="0"/>
-        <line num="14" count="1" type="stmt"/>
-        <line num="15" count="1" type="stmt"/>
-        <line num="17" count="3" type="stmt"/>
-        <line num="21" count="1" type="stmt"/>
-        <line num="22" count="1" type="stmt"/>
-        <line num="35" count="1" type="stmt"/>
+        <line num="12" count="3" type="cond" truecount="1" falsecount="0"/>
+        <line num="14" count="3" type="stmt"/>
+        <line num="30" count="0" type="cond" truecount="0" falsecount="3"/>
+        <line num="31" count="0" type="stmt"/>
+        <line num="32" count="0" type="stmt"/>
+        <line num="34" count="0" type="stmt"/>
+        <line num="38" count="0" type="cond" truecount="0" falsecount="1"/>
+        <line num="39" count="0" type="stmt"/>
         <line num="41" count="0" type="stmt"/>
         <line num="42" count="0" type="stmt"/>
-        <line num="44" count="0" type="stmt"/>
-        <line num="46" count="1" type="stmt"/>
-        <line num="47" count="1" type="stmt"/>
-        <line num="52" count="0" type="stmt"/>
-        <line num="70" count="0" type="stmt"/>
-        <line num="74" count="0" type="stmt"/>
-        <line num="75" count="0" type="stmt"/>
-        <line num="78" count="0" type="stmt"/>
-        <line num="79" count="0" type="stmt"/>
-        <line num="82" count="0" type="stmt"/>
-        <line num="83" count="0" type="stmt"/>
-        <line num="88" count="2" type="stmt"/>
+        <line num="55" count="0" type="stmt"/>
+        <line num="61" count="0" type="stmt"/>
+        <line num="62" count="0" type="stmt"/>
+        <line num="64" count="0" type="stmt"/>
+        <line num="66" count="0" type="stmt"/>
+        <line num="67" count="0" type="stmt"/>
+        <line num="72" count="0" type="stmt"/>
+        <line num="90" count="0" type="stmt"/>
+        <line num="94" count="0" type="stmt"/>
+        <line num="95" count="0" type="stmt"/>
+        <line num="98" count="0" type="stmt"/>
+        <line num="99" count="0" type="stmt"/>
+        <line num="102" count="0" type="stmt"/>
+        <line num="103" count="0" type="stmt"/>
+        <line num="108" count="2" type="stmt"/>
       </file>
     </package>
   </project>
