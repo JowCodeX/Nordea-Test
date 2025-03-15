@@ -30,7 +30,8 @@ const luhnCheck = (number: string): boolean => {
 
 // Match your existing error response structure
 const sendValidationError = (
-    res: Response, 
+    res: Response,
+    next: NextFunction,
     errorType: 'format' | 'date' | 'checksum' | 'age'
 ) => {
     const errors = {
@@ -57,7 +58,13 @@ const sendValidationError = (
         }
     };
     
-    res.status(errors[errorType].status).json(errors[errorType]);
+    const error = new Error(errors[errorType].error);
+    (error as any).status = errors[errorType].status;
+    (error as any).details = errors[errorType];
+
+    next(error);
+
+    return res.status(errors[errorType].status).json(errors[errorType]);
 };
 
 const validatePersonnummer = (
@@ -65,17 +72,19 @@ const validatePersonnummer = (
     res: Response<any, Express.Locals>,
     next: NextFunction
 ) => {
+    console.log('validatePersonnummer function called!');
     try {
         const pnr = req.query.personnummer as string;
 
         if (!pnr) {
-            return sendValidationError(res, 'format');
+            return sendValidationError(res, next, 'format');
         }
 
         // Clean input and validate format
         const cleanPnr = pnr.replace(/[-\s]/g, '');
+        console.log('cleanPnr:', cleanPnr); // Add this line
         if (!/^(\d{10}|\d{12})$/.test(cleanPnr)) {
-            return sendValidationError(res, 'format');
+            return sendValidationError(res,  next,'format');
         }
 
         // Extract components
@@ -100,18 +109,19 @@ const validatePersonnummer = (
             ];
             
             // Calculate possible birth years
-            const currentYear = new Date().getFullYear();
-            const possibleYears = [
-                1900 + parseInt(yy),
-                2000 + parseInt(yy)
-            ].filter(y => y <= currentYear);
-            
-            // Find most recent valid year within 100 years
-            const validYear = possibleYears.find(y => 
-                currentYear - y <= 100
-            );
+        // Calculate possible birth years
+        const currentYear = new Date().getFullYear();
+        const yearPrefixes = [1900, 2000];
+        const possibleYears = yearPrefixes
+            .map(prefix => prefix + parseInt(yy))
+            .filter(year => year <= currentYear);
 
-            if (!validYear) return sendValidationError(res, 'age');
+        // Find most recent valid year within 100 years
+        const validYear = possibleYears.find(y =>
+            currentYear - y <= 100
+        );
+
+            if (!validYear) return sendValidationError(res, next, 'age');
             year = validYear;
         }
 
@@ -126,7 +136,7 @@ const validatePersonnummer = (
         }
 
         if (!isValidDate(year, month, day)) {
-            return sendValidationError(res, 'date');
+            return sendValidationError(res, next, 'date');
         }
 
         // Validate checksum on full normalized number
@@ -134,10 +144,12 @@ const validatePersonnummer = (
             `${year}${mm.padStart(2, '0')}${dd.padStart(2, '0')}${suffix}`;
         
         if (!luhnCheck(normalized)) {
-            return sendValidationError(res, 'checksum');
+            return sendValidationError(res, next, 'checksum');
         }
 
-        res.locals.personnummer = normalized;
+        console.log('Normalized:', normalized, 'Year:', year, 'Month:', month, 'Day:', day); // Add this line
+
+        (res.locals as Express.Locals).personnummer = normalized;
         next();
     } catch (error) {
         next(error);

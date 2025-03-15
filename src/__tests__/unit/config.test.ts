@@ -1,5 +1,5 @@
 // __tests__/unit/config.test.ts
-import { SPAR_CONFIG } from '../../src/config/env';
+import { SPAR_CONFIG } from '../../config/env';
 import fs from 'fs';
 
 test('Certificate files exist', () => {

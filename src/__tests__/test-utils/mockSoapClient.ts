@@ -27,12 +27,22 @@ export const mockSparResponse = (responseData: object) => {
             Body: {
                 PersonsokningSvar: {
                     PersonsokningSvarspost: {
-                        Status: '1', // Ensure status is always set
+                        Status: '1',
+                        Namn: { Fornamn: 'Test', Efternamn: 'Testsson' },
+                        Persondetaljer: { Fodelsedatum: '1957-04-13' },
+                        Folkbokforingsadress: {
+                            SvenskAdress: {
+                                Utdelningsadress2: 'Test Street 123',
+                                PostNr: '12345',
+                                Postort: 'Stockholm'
+                            }
+                        },
+                        SenastAndrad: '2023-01-01',
                         ...responseData
                     }
                 }
             }
         }
-    }])
+    }]);
 };
 

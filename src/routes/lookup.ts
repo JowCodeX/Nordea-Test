@@ -15,8 +15,20 @@ const parser = new XMLParser({
 });
 
 // Response transformation utilities
-const formatName = (name?: { Fornamn?: string; Efternamn?: string }): string => 
-    [name?.Fornamn, name?.Efternamn].filter(Boolean).join(' ') || 'Name not available';
+const formatName = (name?: { 
+    Fornamn?: string | string[]; 
+    Efternamn?: string | string[]; // Allow string array for Efternamn
+}): string => {
+    const fornamn = Array.isArray(name?.Fornamn) ? 
+        name.Fornamn.join(' ') : 
+        name?.Fornamn;
+        
+    const efternamn = Array.isArray(name?.Efternamn) ? 
+        name.Efternamn.join(' ') : 
+        name?.Efternamn;
+
+    return [fornamn, efternamn].filter(Boolean).join(' ') || 'Name not available';
+};
 
 const formatAddress = (address?: { 
     Utdelningsadress2?: string;
@@ -49,8 +61,38 @@ router.get('/', async (req: Request, res: Response, next: NextFunction) => {
             }
         });
 
-        const parsedData: SparResponse = parser.parse(soapResponse);
-        res.json(parsedData);
+        const parsedData = parser.parse(soapResponse);
+        const result = parsedData?.Envelope?.Body.PersonsokningSvar?.PersonsokningSvarspost;
+
+        if (!result) {
+            throw new Error('Invalid SPAR response structure');
+        }
+
+        // Handle SPAR status codes
+        const statusMap: { [key: string]: number } = {
+            '1': 200,  // Found
+            '2': 403,  // Protected identity
+            '4': 404   // Not found
+        } as const;
+
+        const statusCode = statusMap[result.Status as keyof typeof statusMap] ?? 500;
+
+        // Transform response format
+        const responseData = result.Status === '1' ? {
+            data: {
+                name: formatName(result.Namn),
+                birthDate: result.Persondetaljer?.Fodelsedatum,
+                address: formatAddress(result.Folkbokforingsadress?.SvenskAdress),
+                protectedIdentity: result.SkyddadIdentitet === 'true',
+                lastUpdated: result.SenastAndrad
+            }
+        } : {
+            error: result.Status === '2' ? 'Protected identity' : 'Person not found',
+            code: result.Status === '2' ? 'PROTECTED' : 'PERSON_NOT_FOUND'
+        };
+
+        res.status(statusCode).json(responseData);
+
     } catch (error) {
         next(error);
     }
