@@ -1,6 +1,6 @@
 // test-utils/testServer.ts
 import express, { Express, Request, Response, NextFunction } from 'express';
-import lookupRouter from '../../routes/lookup';
+import lookupRouter from '../src/routes/lookup';
 
 // Custom error handler for test environment
 const testErrorHandler = (err: any, req: Request, res: Response, next: NextFunction) => {

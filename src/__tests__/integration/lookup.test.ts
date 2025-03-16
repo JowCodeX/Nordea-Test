@@ -1,7 +1,7 @@
 import request from 'supertest';
 import { Express } from 'express';
-import { createTestServer } from '../test-utils/testServer';
-import { mockSparResponse } from '../test-utils/mockSoapClient';
+import { createTestServer } from '../../../test-utils/testServer';
+import { mockSparResponse } from '../../../test-utils/mockSoapClient';
 
 describe('Person Lookup API Integration', () => {
     let app: Express;

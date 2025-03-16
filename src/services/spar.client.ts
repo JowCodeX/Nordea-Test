@@ -3,7 +3,7 @@ import https from 'https';
 import fs from 'fs';
 import { constants } from 'crypto';
 import { SPAR_CONFIG, SERVER_CONFIG } from '../config/env';
-import * as mockSoapClient from '../__tests__/test-utils/mockSoapClient';
+import * as mockSoapClient from '../../test-utils/mockSoapClient';
 
 export class SparClient {
     private static instance: Promise<Client> | null = null; // Allow null for test environment
