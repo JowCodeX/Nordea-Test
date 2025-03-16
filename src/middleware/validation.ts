@@ -30,8 +30,7 @@ const luhnCheck = (number: string): boolean => {
 
 // Match your existing error response structure
 const sendValidationError = (
-    res: Response,
-    next: NextFunction,
+    res: Response, 
     errorType: 'format' | 'date' | 'checksum' | 'age'
 ) => {
     const errors = {
@@ -58,13 +57,7 @@ const sendValidationError = (
         }
     };
     
-    const error = new Error(errors[errorType].error);
-    (error as any).status = errors[errorType].status;
-    (error as any).details = errors[errorType];
-
-    next(error);
-
-    return res.status(errors[errorType].status).json(errors[errorType]);
+    res.status(errors[errorType].status).json(errors[errorType]);
 };
 
 const validatePersonnummer = (
@@ -77,14 +70,14 @@ const validatePersonnummer = (
         const pnr = req.query.personnummer as string;
 
         if (!pnr) {
-            return sendValidationError(res, next, 'format');
+            return sendValidationError(res, 'format');
         }
 
         // Clean input and validate format
         const cleanPnr = pnr.replace(/[-\s]/g, '');
         console.log('cleanPnr:', cleanPnr); // Add this line
         if (!/^(\d{10}|\d{12})$/.test(cleanPnr)) {
-            return sendValidationError(res,  next,'format');
+            return sendValidationError(res, 'format');
         }
 
         // Extract components
@@ -121,7 +114,7 @@ const validatePersonnummer = (
             currentYear - y <= 100
         );
 
-            if (!validYear) return sendValidationError(res, next, 'age');
+            if (!validYear) return sendValidationError(res, 'age');
             year = validYear;
         }
 
@@ -136,20 +129,20 @@ const validatePersonnummer = (
         }
 
         if (!isValidDate(year, month, day)) {
-            return sendValidationError(res, next, 'date');
+            return sendValidationError(res, 'date');
         }
 
         // Validate checksum on full normalized number
         const normalized = is12Digit ? cleanPnr : 
             `${year}${mm.padStart(2, '0')}${dd.padStart(2, '0')}${suffix}`;
-        
+        console.log('Normalized before Luhn:', normalized); // Add this line
         if (!luhnCheck(normalized)) {
-            return sendValidationError(res, next, 'checksum');
+            return sendValidationError(res, 'checksum');
         }
 
         console.log('Normalized:', normalized, 'Year:', year, 'Month:', month, 'Day:', day); // Add this line
 
-        (res.locals as Express.Locals).personnummer = normalized;
+        res.locals.personnummer = normalized;
         next();
     } catch (error) {
         next(error);

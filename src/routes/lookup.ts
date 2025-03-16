@@ -61,12 +61,17 @@ router.get('/', async (req: Request, res: Response, next: NextFunction) => {
             }
         });
 
+        console.log('Raw SOAP Response:', soapResponse); // Add this line
+
         const parsedData = parser.parse(soapResponse);
         const result = parsedData?.Envelope?.Body.PersonsokningSvar?.PersonsokningSvarspost;
 
         if (!result) {
+            console.error('Invalid SPAR response structure:', parsedData);
             throw new Error('Invalid SPAR response structure');
         }
+
+        console.log('SPAR Status:', result.Status); // Add this line
 
         // Handle SPAR status codes
         const statusMap: { [key: string]: number } = {
