@@ -4,40 +4,60 @@ import validatePersonnummer from '../../middleware/validation';
 describe('Personnummer Validation Middleware', () => {
     let mockRequest: Partial<Request>;
     let mockResponse: Partial<Response>;
-    const nextFunction = jest.fn();
+    let nextFunction: jest.Mock;
 
     beforeEach(() => {
         mockRequest = { query: {} };
-        mockResponse = {
-            locals: {},
-            status: jest.fn().mockReturnThis(),
-            json: jest.fn(),
-            set: jest.fn().mockReturnThis(),
-        }
+        // Create the locals object directly
+        const locals: any = {};
         
-        mockResponse.locals = {};
+        // Create mockResponse with the locals property defined as a getter/setter
+        mockResponse = {
+            // Use Object.defineProperty to properly handle the locals property
+            ...Object.defineProperty({
+                status: jest.fn().mockReturnThis(),
+                json: jest.fn(),
+                set: jest.fn().mockReturnThis(),
+            }, 'locals', {
+                get: () => locals,
+                set: (val) => Object.assign(locals, val),
+                enumerable: true
+            })
+        };
 
+        nextFunction = jest.fn();
+        
+        // Make sure the mocks are reset
         nextFunction.mockClear();
         (mockResponse.status as jest.Mock).mockClear();
         (mockResponse.json as jest.Mock).mockClear();
-        mockResponse.locals = {};
         
-        // Mock NODE_ENV to enable Luhn check
+        // Set NODE_ENV to development for Luhn check
         process.env.NODE_ENV = 'development';
     });
 
     test('should validate personnummer and set it in res.locals', () => {
+        // Add console logs to debug
+        console.log('Before validation - mockResponse.locals:', mockResponse.locals);
+        
         mockRequest.query = { personnummer: '990208-9068' };
         validatePersonnummer(
             mockRequest as Request,
             mockResponse as Response,
             nextFunction
         );
-        expect((mockResponse.locals as { personnummer: string }).personnummer).toBe('199902089068');
+        
+        // Debug logs to see what's happening
+        console.log('After validation - mockResponse.locals:', mockResponse.locals);
+        console.log('Has nextFunction been called:', nextFunction.mock.calls.length > 0);
+        
+        expect(mockResponse.locals).toBeDefined();
+        expect((mockResponse.locals as any).personnummer).toBe('199902089068');
         expect(nextFunction).toHaveBeenCalled();
         expect(mockResponse.status).not.toHaveBeenCalled();
     });
     
+    // Rest of your tests remain the same...
     test('should reject invalid personnummer format', () => {
         mockRequest.query = { personnummer: 'invalid' };
         validatePersonnummer(
@@ -82,7 +102,7 @@ describe('Personnummer Validation Middleware', () => {
                 mockResponse as Response,
                 nextFunction
             );
-            expect(mockResponse.locals && mockResponse.locals.personnummer).toBe(expected);
+            expect(mockResponse.locals && (mockResponse.locals as any).personnummer).toBe(expected);
             expect(nextFunction).toHaveBeenCalled();
             expect(mockResponse.status).not.toHaveBeenCalled();
         });

@@ -82,7 +82,7 @@ const sendValidationError = (
 
 const validatePersonnummer = (
     req: Request,
-    res: Response<any, Express.Locals>,
+    res: Response,
     next: NextFunction
 ) => {
     console.log('validatePersonnummer function called!');
@@ -152,7 +152,16 @@ const validatePersonnummer = (
 
         console.log('Normalized:', normalized, 'Year:', year, 'Month:', month, 'Day:', day);
 
+        // Explicit property assignment to ensure it's set correctly
+        if (!res.locals) {
+            res.locals = {};
+        }
+        
+        // Log before and after to help debug
+        console.log('Before setting res.locals - Current value:', res.locals);
         res.locals.personnummer = normalized;
+        console.log('After setting res.locals - New value:', res.locals);
+        
         next();
     } catch (error) {
         next(error);

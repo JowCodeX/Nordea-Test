@@ -1,14 +1,11 @@
-import { Response } from 'express';
-import { Personnummer } from '../middleware/validation';
+// Update your Express type declarations
+import 'express';
 
 declare global {
-namespace Express {
-    interface Locals {
-    personnummer?: string;
+    namespace Express {
+        interface Locals {
+            personnummer?: string;
+            [key: string]: any;
+        }
     }
-    
-    interface Response {
-    locals: Locals;
-    }
-}
 }

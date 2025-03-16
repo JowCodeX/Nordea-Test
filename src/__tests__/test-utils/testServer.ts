@@ -39,7 +39,7 @@ export async function createTestServer() {
                 normalizedPnr = cleanPnr.length === 10 ? `19${cleanPnr}` : cleanPnr;
             }
             
-            console.log('Test server setting personnummer:', normalizedPnr);
+            // console.log('Test server setting personnummer:', normalizedPnr);
             res.locals.personnummer = normalizedPnr;
             next();
         } catch (error) {
