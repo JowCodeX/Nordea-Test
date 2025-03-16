@@ -36,8 +36,10 @@ jest.mock('soap', () => ({
     }))
 }));
 
+// Updated mockSparResponse function to correctly match the structure expected by the lookup route
 export const mockSparResponse = (responseData: object) => {
-    currentMockImplementation.PersonsokAsync = jest.fn().mockResolvedValue([{
+    // Ensure the response has the exact structure expected by the parser in lookup.ts
+    const structuredResponse = {
         Envelope: {
             Body: {
                 PersonsokningSvar: {
@@ -45,5 +47,15 @@ export const mockSparResponse = (responseData: object) => {
                 }
             }
         }
-    }]);
+    };
+
+    // Make the function return a response that matches the XML parser's output
+    currentMockImplementation.PersonsokAsync = jest.fn().mockResolvedValue([
+        structuredResponse
+    ]);
+
+    // Also update the soap mock to use this implementation
+    (soap.createClientAsync as jest.Mock).mockImplementation(() => Promise.resolve({
+        PersonsokAsync: currentMockImplementation.PersonsokAsync
+    }));
 };

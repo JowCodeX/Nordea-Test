@@ -13,7 +13,10 @@ describe('Personnummer Validation Middleware', () => {
             status: jest.fn().mockReturnThis(),
             json: jest.fn(),
             set: jest.fn().mockReturnThis(),
-        } as Partial<Response>;
+        }
+        
+        mockResponse.locals = {};
+
         nextFunction.mockClear();
         (mockResponse.status as jest.Mock).mockClear();
         (mockResponse.json as jest.Mock).mockClear();
