@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<coverage generated="1742117625302" clover="3.2.0">
-  <project timestamp="1742117625302" name="All files">
-    <metrics statements="148" coveredstatements="112" conditionals="68" coveredconditionals="46" methods="17" coveredmethods="10" elements="233" coveredelements="168" complexity="0" loc="148" ncloc="148" packages="4" files="4" classes="4"/>
+<coverage generated="1742120521182" clover="3.2.0">
+  <project timestamp="1742120521183" name="All files">
+    <metrics statements="148" coveredstatements="98" conditionals="68" coveredconditionals="40" methods="17" coveredmethods="9" elements="233" coveredelements="147" complexity="0" loc="148" ncloc="148" packages="4" files="4" classes="4"/>
     <package name="config">
       <metrics statements="10" coveredstatements="9" conditionals="7" coveredconditionals="3" methods="2" coveredmethods="2"/>
       <file name="env.ts" path="C:\Users\Jooow\Desktop\Nordea-Test\src\config\env.ts">
@@ -19,9 +19,9 @@
       </file>
     </package>
     <package name="middleware">
-      <metrics statements="64" coveredstatements="62" conditionals="31" coveredconditionals="28" methods="4" coveredmethods="4"/>
+      <metrics statements="64" coveredstatements="48" conditionals="31" coveredconditionals="22" methods="4" coveredmethods="3"/>
       <file name="validation.ts" path="C:\Users\Jooow\Desktop\Nordea-Test\src\middleware\validation.ts">
-        <metrics statements="64" coveredstatements="62" conditionals="31" coveredconditionals="28" methods="4" coveredmethods="4"/>
+        <metrics statements="64" coveredstatements="48" conditionals="31" coveredconditionals="22" methods="4" coveredmethods="3"/>
         <line num="8" count="1" type="stmt"/>
         <line num="10" count="8" type="cond" truecount="2" falsecount="0"/>
         <line num="12" count="8" type="cond" truecount="3" falsecount="0"/>
@@ -29,21 +29,21 @@
         <line num="15" count="6" type="stmt"/>
         <line num="16" count="6" type="cond" truecount="3" falsecount="0"/>
         <line num="21" count="1" type="stmt"/>
-        <line num="24" count="1" type="cond" truecount="1" falsecount="1"/>
-        <line num="30" count="1" type="stmt"/>
-        <line num="31" count="1" type="stmt"/>
-        <line num="33" count="1" type="stmt"/>
-        <line num="34" count="9" type="stmt"/>
-        <line num="36" count="9" type="cond" truecount="1" falsecount="0"/>
-        <line num="37" count="5" type="stmt"/>
-        <line num="39" count="5" type="cond" truecount="2" falsecount="0"/>
-        <line num="41" count="9" type="stmt"/>
-        <line num="45" count="1" type="stmt"/>
-        <line num="46" count="1" type="stmt"/>
-        <line num="48" count="1" type="stmt"/>
+        <line num="24" count="0" type="cond" truecount="0" falsecount="2"/>
+        <line num="30" count="0" type="stmt"/>
+        <line num="31" count="0" type="stmt"/>
+        <line num="33" count="0" type="stmt"/>
+        <line num="34" count="0" type="stmt"/>
+        <line num="36" count="0" type="cond" truecount="0" falsecount="1"/>
+        <line num="37" count="0" type="stmt"/>
+        <line num="39" count="0" type="cond" truecount="0" falsecount="2"/>
+        <line num="41" count="0" type="stmt"/>
+        <line num="45" count="0" type="stmt"/>
+        <line num="46" count="0" type="stmt"/>
+        <line num="48" count="0" type="stmt"/>
         <line num="52" count="1" type="stmt"/>
-        <line num="56" count="6" type="stmt"/>
-        <line num="80" count="6" type="stmt"/>
+        <line num="56" count="5" type="stmt"/>
+        <line num="80" count="5" type="stmt"/>
         <line num="83" count="1" type="stmt"/>
         <line num="88" count="11" type="stmt"/>
         <line num="89" count="11" type="stmt"/>
@@ -74,18 +74,18 @@
         <line num="137" count="8" type="cond" truecount="1" falsecount="0"/>
         <line num="138" count="2" type="stmt"/>
         <line num="142" count="6" type="cond" truecount="2" falsecount="0"/>
-        <line num="146" count="6" type="cond" truecount="1" falsecount="0"/>
-        <line num="148" count="1" type="cond" truecount="1" falsecount="0"/>
-        <line num="149" count="1" type="stmt"/>
-        <line num="153" count="5" type="stmt"/>
-        <line num="156" count="5" type="cond" truecount="0" falsecount="1"/>
-        <line num="157" count="0" type="stmt"/>
-        <line num="161" count="5" type="stmt"/>
-        <line num="162" count="5" type="stmt"/>
-        <line num="163" count="5" type="stmt"/>
-        <line num="165" count="5" type="stmt"/>
-        <line num="167" count="0" type="stmt"/>
-        <line num="171" count="1" type="stmt"/>
+        <line num="146" count="6" type="cond" truecount="0" falsecount="1"/>
+        <line num="148" count="0" type="cond" truecount="0" falsecount="1"/>
+        <line num="149" count="0" type="stmt"/>
+        <line num="153" count="6" type="stmt"/>
+        <line num="156" count="6" type="cond" truecount="0" falsecount="1"/>
+        <line num="158" count="0" type="stmt"/>
+        <line num="166" count="6" type="stmt"/>
+        <line num="167" count="6" type="stmt"/>
+        <line num="168" count="6" type="stmt"/>
+        <line num="170" count="6" type="stmt"/>
+        <line num="172" count="0" type="stmt"/>
+        <line num="176" count="1" type="stmt"/>
       </file>
     </package>
     <package name="routes">

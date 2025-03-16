@@ -1,49 +1,52 @@
 import { Request, Response, NextFunction } from 'express';
 import validatePersonnummer from '../../middleware/validation';
 
+type MockResponse = {
+    status: jest.Mock;
+    json: jest.Mock;
+    set: jest.Mock;
+    locals: {
+    personnummer?: string;
+    [key: string]: any;
+    };
+};
+
+
 describe('Personnummer Validation Middleware', () => {
     let mockRequest: Partial<Request>;
-    let mockResponse: Partial<Response>;
+    let mockResponse: MockResponse;
     let nextFunction: jest.Mock;
 
     beforeEach(() => {
         mockRequest = { query: {} };
-        // Create the locals object directly
-        const locals: any = {};
-        
-        // Create mockResponse with the locals property defined as a getter/setter
+        const localsObj = {};        
+
         mockResponse = {
-            // Use Object.defineProperty to properly handle the locals property
-            ...Object.defineProperty({
-                status: jest.fn().mockReturnThis(),
-                json: jest.fn(),
-                set: jest.fn().mockReturnThis(),
-            }, 'locals', {
-                get: () => locals,
-                set: (val) => Object.assign(locals, val),
-                enumerable: true
-            })
-        };
+            status: jest.fn().mockReturnThis(),
+            json: jest.fn(),
+            set: jest.fn().mockReturnThis(),
+            locals: localsObj
+        }
 
         nextFunction = jest.fn();
         
         // Make sure the mocks are reset
         nextFunction.mockClear();
-        (mockResponse.status as jest.Mock).mockClear();
-        (mockResponse.json as jest.Mock).mockClear();
+        mockResponse.status.mockClear();
+        mockResponse.json.mockClear();
         
         // Set NODE_ENV to development for Luhn check
-        process.env.NODE_ENV = 'development';
+        process.env.NODE_ENV = 'test';
     });
 
     test('should validate personnummer and set it in res.locals', () => {
         // Add console logs to debug
-        console.log('Before validation - mockResponse.locals:', mockResponse.locals);
-        
+        console.log('Before validation - mockResponse.locals:', mockResponse.locals);        
         mockRequest.query = { personnummer: '990208-9068' };
+
         validatePersonnummer(
             mockRequest as Request,
-            mockResponse as Response,
+            mockResponse as unknown as Response,
             nextFunction
         );
         
@@ -52,7 +55,7 @@ describe('Personnummer Validation Middleware', () => {
         console.log('Has nextFunction been called:', nextFunction.mock.calls.length > 0);
         
         expect(mockResponse.locals).toBeDefined();
-        expect((mockResponse.locals as any).personnummer).toBe('199902089068');
+        expect(mockResponse.locals.personnummer).toBe('199902089068');
         expect(nextFunction).toHaveBeenCalled();
         expect(mockResponse.status).not.toHaveBeenCalled();
     });
@@ -62,7 +65,7 @@ describe('Personnummer Validation Middleware', () => {
         mockRequest.query = { personnummer: 'invalid' };
         validatePersonnummer(
             mockRequest as Request,
-            mockResponse as Response,
+            mockResponse as unknown as Response,
             nextFunction
         );
         expect(nextFunction).not.toHaveBeenCalled();
@@ -75,7 +78,7 @@ describe('Personnummer Validation Middleware', () => {
     test('should call next with an error if personnummer is missing', () => {
         validatePersonnummer(
             mockRequest as Request,
-            mockResponse as Response,
+            mockResponse as unknown as Response,
             nextFunction
         );
         expect(nextFunction).not.toHaveBeenCalled();
@@ -99,7 +102,7 @@ describe('Personnummer Validation Middleware', () => {
             mockRequest.query = { personnummer: input };
             validatePersonnummer(
                 mockRequest as Request,
-                mockResponse as Response,
+                mockResponse as unknown as Response,
                 nextFunction
             );
             expect(mockResponse.locals && (mockResponse.locals as any).personnummer).toBe(expected);
@@ -119,7 +122,7 @@ describe('Personnummer Validation Middleware', () => {
             mockRequest.query = { personnummer: input };
             validatePersonnummer(
                 mockRequest as Request,
-                mockResponse as Response,
+                mockResponse as unknown as Response,
                 nextFunction
             );
             expect(nextFunction).not.toHaveBeenCalled();

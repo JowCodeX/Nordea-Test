@@ -153,8 +153,13 @@ const validatePersonnummer = (
         console.log('Normalized:', normalized, 'Year:', year, 'Month:', month, 'Day:', day);
 
         // Explicit property assignment to ensure it's set correctly
-        if (!res.locals) {
-            res.locals = {};
+        if (res.locals === undefined) {
+            // Explicitly define res.locals if it's undefined
+            Object.defineProperty(res, 'locals', {
+                value: {},
+                writable: true,
+                configurable: true
+            });
         }
         
         // Log before and after to help debug
