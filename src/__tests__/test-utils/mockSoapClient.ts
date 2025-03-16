@@ -7,7 +7,22 @@ export let currentMockImplementation: any = {
             Body: {
                 PersonsokningSvar: {
                     PersonsokningSvarspost: {
-                        Status: '1' // Default successful status
+                        Status: '1', // Default successful status
+                        Namn: { 
+                            Fornamn: ['Test'], 
+                            Efternamn: 'Testsson' 
+                        },
+                        Persondetaljer: { 
+                            Fodelsedatum: '1957-04-13' 
+                        },
+                        Folkbokforingsadress: {
+                            SvenskAdress: {
+                                Utdelningsadress2: 'Test Street 123',
+                                PostNr: '12345',
+                                Postort: 'Stockholm'
+                            }
+                        },
+                        SenastAndrad: '2023-01-01'
                     }
                 }
             }
@@ -26,23 +41,9 @@ export const mockSparResponse = (responseData: object) => {
         Envelope: {
             Body: {
                 PersonsokningSvar: {
-                    PersonsokningSvarspost: {
-                        Status: '1',
-                        Namn: { Fornamn: 'Test', Efternamn: 'Testsson' },
-                        Persondetaljer: { Fodelsedatum: '1957-04-13' },
-                        Folkbokforingsadress: {
-                            SvenskAdress: {
-                                Utdelningsadress2: 'Test Street 123',
-                                PostNr: '12345',
-                                Postort: 'Stockholm'
-                            }
-                        },
-                        SenastAndrad: '2023-01-01',
-                        ...responseData
-                    }
+                    PersonsokningSvarspost: responseData
                 }
             }
         }
     }]);
 };
-

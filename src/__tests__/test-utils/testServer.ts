@@ -9,9 +9,12 @@ export async function createTestServer() {
     // Add proper body parser
     app.use(express.json());
     
-    // Mock validation middleware
+    // For tests, bypass the real validation middleware
+    // and inject the valid test personnummer into res.locals
     app.use('/lookup', (req, res, next) => {
-        res.locals = { personnummer: '195704133106' }; // Valid test number
+        // Use the personnummer from the query if provided, otherwise use default test number
+        const personnummer = req.query.personnummer as string || '195704133106'; 
+        res.locals.personnummer = personnummer;
         next();
     });
     
