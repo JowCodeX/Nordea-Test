@@ -36,9 +36,8 @@ jest.mock('soap', () => ({
     }))
 }));
 
-// Updated mockSparResponse function to correctly match the structure expected by the lookup route
 export const mockSparResponse = (responseData: object) => {
-    // Ensure the response has the exact structure expected by the parser in lookup.ts
+    // Ensure the response has the exact structure expected by the lookup route
     const structuredResponse = {
         Envelope: {
             Body: {
