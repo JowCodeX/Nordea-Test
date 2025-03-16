@@ -1,12 +1,34 @@
+// src/services/spar.client.ts
+
 import soap, { createClientAsync, Client } from 'soap';
 import https from 'https';
 import fs from 'fs';
 import { constants } from 'crypto';
 import { SPAR_CONFIG, SERVER_CONFIG } from '../config/env';
-import * as mockSoapClient from '../../test-utils/mockSoapClient';
+
+// Define the interface for the mock client
+interface MockSoapClient {
+  currentMockImplementation: {
+    PersonsokAsync: (...args: any[]) => Promise<any>;
+  };
+}
+
+// Properly typed import with fallback
+let mockSoapClient: MockSoapClient;
+try {
+  mockSoapClient = require('../../test-utils/mockSoapClient');
+} catch (error) {
+  mockSoapClient = {
+    currentMockImplementation: {
+      PersonsokAsync: async () => {
+        throw new Error('Mock SOAP client not properly initialized');
+      }
+    }
+  };
+}
 
 export class SparClient {
-    private static instance: Promise<Client> | null = null; // Allow null for test environment
+    private static instance: Promise<Client> | null = null;
     private static lastClientCreation: number = 0;
 
     static async getClient(): Promise<Client> {
@@ -22,6 +44,12 @@ export class SparClient {
             this.instance = this.createClient();
             this.lastClientCreation = Date.now();
         }
+        
+        // Add a null check to satisfy TypeScript
+        if (!this.instance) {
+            throw new Error('Failed to create SOAP client');
+        }
+        
         return this.instance;
     }
 
@@ -88,7 +116,7 @@ export class SparClient {
 
         client.on('response', (xml, eid) => {
             console.debug(`SOAP Response (${eid}):`, xml);
-        });
+        }); 
 
         client.on('soapError', (error, eid) => {
             console.error(`SOAP Error (${eid}):`, error);
