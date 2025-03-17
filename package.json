@@ -9,7 +9,7 @@
     "start": "node -r dotenv/config dist/index.js",
     "dev": "cross-env NODE_ENV=development ts-node-dev src/index.ts",
     "prestart": "npm run build",
-    "test": "cross-env NODE_ENV=test jest",
+    "test": "cross-env NODE_ENV=test jest --runInBand",
     "test:watch": "NODE_ENV=test jest --watch",
     "test:cov": "jest --coverage",
     "test:int": "jest integration",

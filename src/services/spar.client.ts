@@ -1,5 +1,3 @@
-// src/services/spar.client.ts
-
 import soap, { createClientAsync, Client } from 'soap';
 import https from 'https';
 import fs from 'fs';
@@ -8,23 +6,23 @@ import { SPAR_CONFIG, SERVER_CONFIG } from '../config/env';
 
 // Define the interface for the mock client
 interface MockSoapClient {
-  currentMockImplementation: {
+currentMockImplementation: {
     PersonsokAsync: (...args: any[]) => Promise<any>;
-  };
+};
 }
 
 // Properly typed import with fallback
 let mockSoapClient: MockSoapClient;
 try {
-  mockSoapClient = require('../../test-utils/mockSoapClient');
+mockSoapClient = require('../../test-utils/mockSoapClient');
 } catch (error) {
-  mockSoapClient = {
+mockSoapClient = {
     currentMockImplementation: {
-      PersonsokAsync: async () => {
+    PersonsokAsync: async () => {
         throw new Error('Mock SOAP client not properly initialized');
-      }
     }
-  };
+    }
+};
 }
 
 export class SparClient {
@@ -57,7 +55,23 @@ export class SparClient {
         if (process.env.NODE_ENV === 'test') {
             throw new Error('Should not create real SOAP client in test environment');
         }
+        
         try {
+            // In development mode, we can use mock data if certificates don't exist
+            if (process.env.NODE_ENV === 'development') {
+                // Check if certificate files exist
+                const certExists = fs.existsSync(SPAR_CONFIG.CERTS.CERT);
+                const keyExists = fs.existsSync(SPAR_CONFIG.CERTS.KEY);
+                const caExists = fs.existsSync(SPAR_CONFIG.CERTS.CA);
+                
+                if (!certExists || !keyExists || !caExists) {
+                    console.warn('Certificate files not found. Using mock SOAP client in development mode.');
+                    return {
+                        PersonsokAsync: mockSoapClient.currentMockImplementation.PersonsokAsync
+                    } as unknown as Client;
+                }
+            }
+            
             const wsdlOptions = {
                 strictSSL: true,
                 rejectUnauthorized: SERVER_CONFIG.ENV === 'production',
@@ -70,19 +84,28 @@ export class SparClient {
                 ca: fs.readFileSync(SPAR_CONFIG.CERTS.CA),
                 agent: new https.Agent({ keepAlive: true })
             };
-
+    
             const client = await createClientAsync(SPAR_CONFIG.WSDL_URL, {
                 wsdl_options: wsdlOptions,
                 forceSoap12Headers: true,
                 overridePromiseSuffix: 'Async'
             });
-
+    
             this.configureSecurityHeaders(client);
             this.setupClientHooks(client);
-
+    
             return client;
         } catch (error) {
             console.error('SOAP client creation failed:', error);
+            
+            // In development, fallback to mock client
+            if (process.env.NODE_ENV === 'development') {
+                console.warn('Falling back to mock SOAP client in development mode');
+                return {
+                    PersonsokAsync: mockSoapClient.currentMockImplementation.PersonsokAsync
+                } as unknown as Client;
+            }
+            
             throw new Error('Failed to initialize SPAR client');
         }
     }
