@@ -2,6 +2,7 @@ import { Router, Request, Response, NextFunction } from 'express';
 import { XMLParser } from 'fast-xml-parser';
 import axios, {AxiosError } from 'axios';
 import https from 'https';
+import path from 'path';
 import fs from 'fs';
 import { SPAR_CONFIG } from '../config/env';
 
@@ -46,8 +47,8 @@ const formatAddress = (address?: {
 // Main lookup endpoint
 router.get('/', async (req: Request, res: Response, next: NextFunction) => {
     try {
-        const pnr = res.locals.personnummer;
-        if (!pnr) {
+        const cleanPnr = res.locals.personnummer;
+        if (!cleanPnr) {
             return res.status(400).json({
                 error: 'Missing personnummer',
                 code: 'MISSING_PARAM'
@@ -57,11 +58,11 @@ router.get('/', async (req: Request, res: Response, next: NextFunction) => {
         const customerNumber = SPAR_CONFIG.CUSTOMER_NUMBER;
         const assignmentId = SPAR_CONFIG.ASSIGNMENT_ID;
 
-        let soapBody = fs.readFileSync('../config/personsok-request.xml', 'utf8');
-
-        soapBody = soapBody.replace('{{customerNumber}}', customerNumber);
-        soapBody = soapBody.replace('{{assignmentId}}', assignmentId);
-        soapBody = soapBody.replace('{{personnummer}}', pnr);
+        let soapBody = fs.readFileSync(path.resolve(__dirname, '../config/personsok-request.xml'), 'utf-8');
+        
+        soapBody = soapBody.replace(/{{customerNumber}}/g, SPAR_CONFIG.CUSTOMER_NUMBER);
+        soapBody = soapBody.replace(/{{assignmentId}}/g, SPAR_CONFIG.ASSIGNMENT_ID);
+        soapBody = soapBody.replace(/{{personnummer}}/g, cleanPnr);
 
         const url = SPAR_CONFIG.WSDL_URL.replace('?wsdl', '');
         const soapActionHeader = 'http://skatteverket.se/spar/personsok/2023.1/PersonsokService/Personsok';
