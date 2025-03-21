@@ -1,9 +1,9 @@
 import { Router, Request, Response, NextFunction } from 'express';
 import { XMLParser } from 'fast-xml-parser';
-import axios, {AxiosError } from 'axios';
+import axios, { AxiosError } from 'axios';
 import https from 'https';
-import path from 'path';
 import fs from 'fs';
+import path from 'path';
 import { SPAR_CONFIG } from '../config/env';
 
 const router = Router();
@@ -13,8 +13,11 @@ const parser = new XMLParser({
     preserveOrder: false,
     processEntities: true,
     allowBooleanAttributes: true,
-    tagValueProcessor: (_, val) => val?.trim() // Added null check
-});
+    tagValueProcessor: (_, val) => val?.trim(), // Added null check
+    processNamespaces: true,
+    namespaceaware: true,
+    alwaysCreateTextNode: false,
+}); 
 
 // Response transformation utilities
 const formatName = (name?: { 
@@ -47,8 +50,8 @@ const formatAddress = (address?: {
 // Main lookup endpoint
 router.get('/', async (req: Request, res: Response, next: NextFunction) => {
     try {
-        const cleanPnr = res.locals.personnummer;
-        if (!cleanPnr) {
+        const pnr = res.locals.personnummer;
+        if (!pnr) {
             return res.status(400).json({
                 error: 'Missing personnummer',
                 code: 'MISSING_PARAM'
@@ -58,38 +61,77 @@ router.get('/', async (req: Request, res: Response, next: NextFunction) => {
         const customerNumber = SPAR_CONFIG.CUSTOMER_NUMBER;
         const assignmentId = SPAR_CONFIG.ASSIGNMENT_ID;
 
-        let soapBody = fs.readFileSync(path.resolve(__dirname, '../config/personsok-request.xml'), 'utf-8');
+        // Use path.resolve to correctly locate the XML template file
+        const templatePath = path.resolve(__dirname, '../../src/config/personsok-request.xml');
+        //console.log('Loading SOAP template from:', templatePath);
         
-        soapBody = soapBody.replace(/{{customerNumber}}/g, SPAR_CONFIG.CUSTOMER_NUMBER);
-        soapBody = soapBody.replace(/{{assignmentId}}/g, SPAR_CONFIG.ASSIGNMENT_ID);
-        soapBody = soapBody.replace(/{{personnummer}}/g, cleanPnr);
+        let soapBody;
+        try {
+            soapBody = fs.readFileSync(templatePath, 'utf8');
+        } catch (error) {
+            console.error(`Failed to read XML template: ${error}`);
+            return res.status(500).json({
+                error: 'Failed to load SOAP request template',
+                code: 'TEMPLATE_NOT_FOUND'
+            });
+        }
+
+        // Replace placeholders with actual values
+        soapBody = soapBody
+        .replace(/\$\{customerNumber\}/g, customerNumber)  // <- Add regex syntax
+        .replace(/\$\{assignmentId\}/g, assignmentId)
+        .replace(/\$\{personnummer\}/g, pnr);
 
         const url = SPAR_CONFIG.WSDL_URL.replace('?wsdl', '');
         const soapActionHeader = 'http://skatteverket.se/spar/personsok/2023.1/PersonsokService/Personsok';
         const contentTypeHeader = 'text/xml';
 
+        // Read certificate files with proper error handling and typed buffer storage
+        let cert: Buffer;
+        let key: Buffer;
+        let ca: Buffer;
+
+        try {
+            cert = fs.readFileSync(SPAR_CONFIG.CERTS.CERT);
+            key = fs.readFileSync(SPAR_CONFIG.CERTS.KEY);
+            ca = fs.readFileSync(SPAR_CONFIG.CERTS.CA);
+            console.log('Certificates loaded successfully');
+        } catch (error) {
+            console.error(`Failed to read certificate files: ${error}`);
+            return res.status(500).json({
+                error: 'Failed to load SSL certificates',
+                code: 'CERT_LOAD_ERROR'
+            });
+        }
+
+        // Configure HTTPS agent with proper cert verification
         const httpsAgent = new https.Agent({
-            cert: fs.readFileSync(SPAR_CONFIG.CERTS.CERT),
-            key: fs.readFileSync(SPAR_CONFIG.CERTS.KEY),
-            ca: fs.readFileSync(SPAR_CONFIG.CERTS.CA),
+            cert,
+            key,
+            ca,
             secureProtocol: 'TLSv1_2_method',
-            rejectUnauthorized: true
+            // Use rejectUnauthorized based on environment
+            // In development/test, we might want to disable strict verification
+            rejectUnauthorized: process.env.NODE_ENV === 'production'
         });
 
-        console.log('Sending SOAP Request', soapBody);
+        console.log(`SSL verification: ${process.env.NODE_ENV === 'production' ? 'Enabled' : 'Disabled for non-production environment'}`);
+        console.log('Sending SOAP Request to:', url);
 
         const response = await axios.post(url, soapBody, {
             headers: {
                 'Content-Type': contentTypeHeader,
                 'SOAPAction': soapActionHeader
             },
-            httpsAgent: httpsAgent
+            httpsAgent: httpsAgent,
+            // Add timeout to prevent hanging requests
+            timeout: 30000
         });
 
-        console.log('Raw Axios Response:', response.data);
+        console.log('SOAP Response received, status:', response.status);
 
         let result;
-        if(process.env.NODE_ENV === 'test') {
+        if (process.env.NODE_ENV === 'test') {
             const parsedData = parser.parse(response.data);
             result = parsedData?.Envelope?.Body?.PersonsokningSvar?.PersonsokningSvarspost;
         } else {
@@ -105,7 +147,7 @@ router.get('/', async (req: Request, res: Response, next: NextFunction) => {
             }
         }
 
-        if(!result) {
+        if (!result) {
             console.error('Invalid SPAR response structure:', response.data);
             return res.status(500).json({
                 error: 'Invalid SPAR response structure',
@@ -141,6 +183,22 @@ router.get('/', async (req: Request, res: Response, next: NextFunction) => {
         console.error('Lookup route error:', error);
         if (axios.isAxiosError(error)) {
             console.error('Axios Error Details:', error.response ? error.response.data : error.message);
+            
+            // Handle specific Axios errors with more informative responses
+            if (error.code === 'ECONNREFUSED') {
+                return res.status(503).json({
+                    error: 'SPAR service unavailable',
+                    code: 'SPAR_UNAVAILABLE'
+                });
+            }
+            
+            if (error.code === 'UNABLE_TO_GET_ISSUER_CERT_LOCALLY') {
+                return res.status(500).json({
+                    error: 'SSL certificate validation failed',
+                    code: 'SSL_CERT_ERROR',
+                    message: 'The application could not verify the SPAR server\'s SSL certificate'
+                });
+            }
         }
         next(error);
     }

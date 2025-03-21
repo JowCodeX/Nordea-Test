@@ -2,8 +2,8 @@
 <soap:Envelope
     xmlns:fraga="http://statenspersonadressregister.se/schema/personsok/2023.1/personsokningfraga"
     xmlns:idinfo="http://statenspersonadressregister.se/schema/komponent/metadata/identifieringsinformationWs-1.1"
-    xmlns:person="http://statenspersonadressregister.se/schema/komponent/person/person-1.2"
-    xmlns:sok="http://statenspersonadressregister.se/schema/komponent/sok/personsokningsokparametrar-1.1"
+    xmlns:person="http://statenspersonadressregister.se/schema/komponent/person/person-1.3"
+    xmlns:sok="http://statenspersonadressregister.se/schema/komponent/sok/personsokningsokparametrar-1.2"
     xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/">
     
     <soap:Header>
