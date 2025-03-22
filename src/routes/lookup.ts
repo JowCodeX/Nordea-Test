@@ -14,37 +14,30 @@ const parser = new XMLParser({
     processEntities: true,
     allowBooleanAttributes: true,
     tagValueProcessor: (_, val) => val?.trim(), // Added null check
-    processNamespaces: true,
-    namespaceaware: true,
-    alwaysCreateTextNode: false,
+    removeNSPrefix: true,
+    isArray: (name) => [
+        'PersonsokningSvarspost',
+        'Namn',
+        'Folkbokforingsadress',
+        'SvenskAdress',
+        'Persondetaljer'
+    ].includes(name)
 }); 
 
 // Response transformation utilities
-const formatName = (name?: { 
-    Fornamn?: string | string[]; 
-    Efternamn?: string | string[]; // Allow string array for Efternamn
-}): string => {
-    if (!name) return 'Name not available';
-    
-    const fornamn = Array.isArray(name.Fornamn) ? 
-        name.Fornamn.join(' ') : 
-        name.Fornamn;
-        
-    const efternamn = Array.isArray(name.Efternamn) ? 
-        name.Efternamn.join(' ') : 
-        name.Efternamn;
-
-    return [fornamn, efternamn].filter(Boolean).join(' ') || 'Name not available';
+const formatName = (nameData: any): string => {
+    const namn = nameData?.Namn?.[0];
+    return [
+        namn?.Fornamn,
+        namn?.Mellannamn,
+        namn?.Efternamn
+    ].filter(Boolean).join(' ') || 'Name not available';
 };
 
-const formatAddress = (address?: { 
-    Utdelningsadress2?: string;
-    PostNr?: string;
-    Postort?: string;
-}) => ({
-    street: address?.Utdelningsadress2 || 'Unknown',
-    postalCode: address?.PostNr || 'Unknown',
-    city: address?.Postort || 'Unknown'
+const formatAddress = (addressData: any) => ({
+    street: addressData?.Folkbokforingsadress?.[0]?.SvenskAdress?.[0]?.Utdelningsadress2 || 'Unknown',
+    postalCode: addressData?.Folkbokforingsadress?.[0]?.SvenskAdress?.[0]?.PostNr || 'Unknown',
+    city: addressData?.Folkbokforingsadress?.[0]?.SvenskAdress?.[0]?.Postort || 'Unknown'
 });
 
 // Main lookup endpoint
@@ -133,13 +126,41 @@ router.get('/', async (req: Request, res: Response, next: NextFunction) => {
         let result;
         if (process.env.NODE_ENV === 'test') {
             const parsedData = parser.parse(response.data);
-            result = parsedData?.Envelope?.Body?.PersonsokningSvar?.PersonsokningSvarspost;
+            console.log('Parsed XML structure:', JSON.stringify(parsedData, null, 2));
+
+
+            const body = parsedData?.Envelope?.Body || {};
+            const responsePart = body.SPARPersonsokningSvar || body['ns26:SPARPersonsokningSvar'];
+
+            result = 
+            responsePart?.['ns26:PersonsokningSvarspost']?.[0] ||
+            responsePart?.PersonsokningSvarspost?.[0] ||
+            responsePart?.PersonsokningSvarspost;
+
         } else {
             try {
                 const parsedData = parser.parse(response.data);
-                result = parsedData?.Envelope?.Body?.PersonsokningSvar?.PersonsokningSvarspost;
+                console.log('Parsed XML structure:', JSON.stringify(parsedData, null, 2));
+    
+    
+                const body = parsedData?.Envelope?.Body || {};
+                const responsePart = body.SPARPersonsokningSvar || body['ns26:SPARPersonsokningSvar'];
+    
+                result = 
+                responsePart?.['ns26:PersonsokningSvarspost']?.[0] ||
+                responsePart?.PersonsokningSvarspost?.[0] ||
+                responsePart?.PersonsokningSvarspost;
+
+                if(!result) {
+                    result = parsedData?.Envelope?.Body?.[0]?.['ns26:SPARPersonsokningSvar']?.[0]?.
+                    ['ns26:PersonsokningSvarspost']?.[0];
+                }
+
+                console.log('Processed result:', JSON.stringify(result, null, 2));
+
             } catch (error) {
                 console.error('XML parsing error:', error);
+                console.error('Raw XML response:', response.data.substring(0, 500) + '...');
                 return res.status(500).json({
                     error: 'Failed to parse SOAP response',
                     code: 'XML_PARSE_ERROR'
