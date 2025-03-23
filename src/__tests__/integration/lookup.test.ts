@@ -6,55 +6,62 @@ import { mockSparResponse } from '../../../test-utils/mockSoapClient';
 describe('Person Lookup API Integration', () => {
     let app: Express;
 
-    // Mock valid personnummer in test server
     beforeAll(async () => {
         app = await createTestServer();
     });
 
     test('Successful lookup with valid data', async () => {
         mockSparResponse({
-            Status: '1',
-            Namn: { 
-                Fornamn: ['Test', 'User'], 
-                Efternamn: 'Testsson' 
+            PersonId: {
+                IdNummer: '195704133106',
+                Typ: 'PERSONNUMMER'
             },
-            Persondetaljer: { 
-                Fodelsedatum: '1957-04-13' 
-            },
-            Folkbokforingsadress: {
-                SvenskAdress: {
-                    Utdelningsadress2: 'Test Street 123',
-                    PostNr: '12345',
-                    Postort: 'Stockholm'
-                }
-            },
-            SenastAndrad: '2023-01-01'
+            Namn: [{
+                Fornamn: 'Christina Birgitta Ulrika',
+                Mellannamn: 'Thomeaus',
+                Efternamn: 'Efternamn3542',
+                Aviseringsnamn: 'Efternamn3542, Christina Birgitta'
+            }],
+            Persondetaljer: [{
+                Fodelsedatum: '1957-04-13',
+                Kon: 'KVINNA'
+            }],
+            Folkbokforingsadress: [{
+                SvenskAdress: [{
+                    Utdelningsadress2: 'Gatan142 8',
+                    PostNr: 11146,
+                    Postort: 'STOCKHOLM'
+                }]
+            }],
+            SenasteAndringSPAR: '2021-09-25',
+            SkyddadFolkbokforing: 'NEJ'
         });
 
         const response = await request(app)
             .get('/lookup')
-            .query({ personnummer: '195704133106' }); // Valid test number
+            .query({ personnummer: '195704133106' });
 
         expect(response.status).toBe(200);
         expect(response.body).toMatchObject({
             data: {
-                name: 'Test User Testsson',
+                name: 'Christina Birgitta Ulrika Thomeaus Efternamn3542',
                 birthDate: '1957-04-13',
-                address: {
-                    street: 'Test Street 123',
-                    postalCode: '12345',
-                    city: 'Stockholm'
+                adress: {
+                    street: 'Gatan142 8',
+                    postalCode: 11146,
+                    city: 'STOCKHOLM'
                 },
                 protectedIdentity: false,
-                lastUpdated: '2023-01-01'
+                lastUpdated: '2021-09-25'
             }
         });
     });
 
     test('Handles protected identity response', async () => {
         mockSparResponse({
-            Status: '2',
-            SkyddadIdentitet: 'true'
+            SkyddadFolkbokforing: 'JA',
+            Sekretessmarkering: 'JA',
+            PersonsokningSvarspost: []
         });
 
         const response = await request(app)
@@ -70,21 +77,18 @@ describe('Person Lookup API Integration', () => {
 
     test('Handles not found response', async () => {
         mockSparResponse({
-            Status: '4',
-        PersonsokningSvarspost: {
+            PersonsokningSvarspost: [],
             Status: '4'
-        }
-    });
-    
+        });
+
         const response = await request(app)
-        .get('/lookup')
-        .query({ personnummer: '195704133106' });
-    
-        // Fix status code mismatch
-        expect(response.status).toBe(404); // Was 400 in original
+            .get('/lookup')
+            .query({ personnummer: '195704133106' });
+
+        expect(response.status).toBe(404);
         expect(response.body).toEqual({
-        error: 'Person not found',
-        code: 'PERSON_NOT_FOUND'
+            error: 'Person not found',
+            code: 'PERSON_NOT_FOUND'
         });
     });
 });

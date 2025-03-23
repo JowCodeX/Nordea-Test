@@ -24,13 +24,7 @@ throw new Error(`
 `);
 }
 
-// console.log("validatePersonnummer type: ", typeof validatePersonnummer);
-// console.log("lookupRouter type: ", typeof lookupRouter);
-
 app.use(express.json());
-
-// console.log('Is lookupRouter a function?', typeof lookupRouter === 'function');
-// console.log('Is validatePersonnummer a function?', typeof validatePersonnummer === 'function');
 
 app.use('/lookup',
     validatePersonnummer, 

@@ -1,31 +1,35 @@
-// test-utils/mockSoapClient.ts
-
-// This interface represents the expected structure of a SPAR response
 interface MockSparResponse {
-    Status?: string;
-    Namn?: { 
-      Fornamn?: string | string[]; 
-      Efternamn?: string | string[]; 
-    };
-    Persondetaljer?: { 
-      Fodelsedatum?: string 
-    };
-    Folkbokforingsadress?: {
-      SvenskAdress?: {
-        Utdelningsadress2?: string;
-        PostNr?: string;
-        Postort?: string;
-      }
-    };
-    SkyddadIdentitet?: string;
-    SenastAndrad?: string;
-    [key: string]: any;
-  }
+  PersonId?: {
+    IdNummer: string;
+    Typ: string;
+  };
+  Namn?: Array<{
+    Fornamn?: string | string;
+    Mellannamn?: string;
+    Efternamn?: string | string;
+    Aviseringsnamn?: string;
+  }>;
+  Persondetaljer?: Array<{
+    Fodelsedatum?: string;
+    Kon?: string;
+  }>;
+  Folkbokforingsadress?: Array<{
+    SvenskAdress?: Array<{
+      Utdelningsadress2?: string;
+      PostNr?: number;
+      Postort?: string;
+    }>;
+  }>;
+  SkyddadFolkbokforing?: string;
+  Sekretessmarkering?: string;
+  SenasteAndringSPAR?: string;
+  Status?: string;
+  PersonsokningSvarspost?: any;
+  [key: string]: any;
+}
   
-  // Default mock implementation
   export const currentMockImplementation = {
     PersonsokAsync: async () => {
-      // In development mode, return a simple mock response
       return [
         {
           Envelope: {
@@ -57,21 +61,17 @@ interface MockSparResponse {
     }
   };
   
-  // Function to set a custom mock response (used in tests)
   export const mockSparResponse = (mockResponse: MockSparResponse) => {
-    // Check if we're in a test environment
     if (typeof jest === 'undefined') {
-      console.warn('mockSparResponse is only meant to be used in test environments');
       return;
     }
     
-    // When in a test environment, use Jest to mock the implementation
     currentMockImplementation.PersonsokAsync = jest.fn().mockResolvedValue([
       {
         Envelope: {
           Body: {
             PersonsokningSvar: {
-              PersonsokningSvarspost: mockResponse
+              PersonsokningSvarspost: [mockResponse]
             }
           }
         }
@@ -79,17 +79,13 @@ interface MockSparResponse {
     ]);
   };
   
-  // Helper file for test server creation
   export const createTestServer = async () => {
-    // This is a placeholder - in a real test environment, 
-    // you'd implement this to create a test server
     if (typeof jest === 'undefined') {
       throw new Error('createTestServer is only meant to be used in test environments');
     }
     
-    // In a test environment, we'd properly implement this
     const express = require('express');
     const app = express();
-    // Add your routes and middleware here
+
     return app;
   };

@@ -1,4 +1,3 @@
-// __tests__/unit/config.test.ts
 import { SPAR_CONFIG } from '../../config/env';
 import fs from 'fs';
 

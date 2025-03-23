@@ -1,4 +1,3 @@
-// Update your Express type declarations
 import 'express';
 
 declare global {

@@ -30,18 +30,15 @@ describe('Personnummer Validation Middleware', () => {
 
         nextFunction = jest.fn();
         
-        // Make sure the mocks are reset
+
         nextFunction.mockClear();
         mockResponse.status.mockClear();
         mockResponse.json.mockClear();
         
-        // Set NODE_ENV to development for Luhn check
         process.env.NODE_ENV = 'test';
     });
 
-    test('should validate personnummer and set it in res.locals', () => {
-        // Add console logs to debug
-        console.log('Before validation - mockResponse.locals:', mockResponse.locals);        
+    test('should validate personnummer and set it in res.locals', () => {    
         mockRequest.query = { personnummer: '990208-9068' };
 
         validatePersonnummer(
@@ -50,17 +47,12 @@ describe('Personnummer Validation Middleware', () => {
             nextFunction
         );
         
-        // Debug logs to see what's happening
-        console.log('After validation - mockResponse.locals:', mockResponse.locals);
-        console.log('Has nextFunction been called:', nextFunction.mock.calls.length > 0);
-        
         expect(mockResponse.locals).toBeDefined();
         expect(mockResponse.locals.personnummer).toBe('199902089068');
         expect(nextFunction).toHaveBeenCalled();
         expect(mockResponse.status).not.toHaveBeenCalled();
     });
     
-    // Rest of your tests remain the same...
     test('should reject invalid personnummer format', () => {
         mockRequest.query = { personnummer: 'invalid' };
         validatePersonnummer(
@@ -96,7 +88,6 @@ describe('Personnummer Validation Middleware', () => {
 
     validCases.forEach(({ input, expected, description }) => {
         test(`Handles ${description} (${input})`, () => {
-            // Skip Luhn check for tests
             process.env.NODE_ENV = 'test';
             
             mockRequest.query = { personnummer: input };

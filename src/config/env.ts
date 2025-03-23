@@ -3,7 +3,7 @@ import path from 'path';
 
 dotenv.config({ path: path.resolve(__dirname, '../../.env') });
 
-// Validate critical environment variables
+
 const validateEnv = (vars: string[]) => {
 const missing = vars.filter(v => !process.env[v]);
 if (missing.length) {

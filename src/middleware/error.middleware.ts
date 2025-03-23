@@ -1,4 +1,3 @@
-// error.middleware.ts
 import { Request, Response, NextFunction } from 'express';
 import { SERVER_CONFIG } from '../config/env';
 
@@ -11,7 +10,6 @@ export const errorHandler = (
     const status = err.status || 500;
     const message = err.message || 'Internal Server Error';
     
-    // SOAP Fault handling
     if (err.root?.Envelope?.Body?.Fault) {
         const fault = err.root.Envelope.Body.Fault;
         return res.status(500).json({
@@ -21,7 +19,6 @@ export const errorHandler = (
         });
     }
 
-    // SPAR-specific errors
     if (err.code === 'ECONNREFUSED') {
         return res.status(503).json({
             code: 'SPAR_UNAVAILABLE',
