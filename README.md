@@ -178,3 +178,4 @@ The service exposes a single endpoint (`/`) that accepts a Swedish personal iden
 
 ## Project Structure
 
+Nordea-Test/ ├── .env ├── certs/ │ ├── bolag-a.key │ ├── bolag-a.crt │ └── bolag-a.pem ├── src/ │ ├── config/ │ │ └── env.ts │ ├── routes/ │ │ └── lookup.ts │ ├── services/ │ │ └── spar.client.ts │ ├── test-utils/ │ │ └── mockSoapClient.ts │ └── index.ts ├── package.json └── tsconfig.json
